@@ -3,15 +3,11 @@ This repository will introduce the basic of Halide -> (Algorithm + Scheduling)
 
 ## Basic Functions
 
-Tile             |   Vectorize (SIMD) |  Unroll Loop
-:-------------------------:|:-------------------------: |:-------------------------:
-Divide whole image into tiles|   x86 SSE command |  Reduce repeat calculation
-![](./figures/tile.gif?raw=true)  |  ![](./figures/vectorize.gif?raw=true) |  ![](./figures/unroll.gif?raw=true)
+Tile             |   Tile + Fuse + Parallel | Vectorize (SIMD) |  Unroll Loop
+:-------------------------:|:-------------------------: |:-------------------------: |:-------------------------:
+Divide whole image into tiles|  parallel taling |   x86 SSE command |  Reduce repeat calculation
+![](./figures/tile.gif?raw=true)  | ![](./figures/tile_parallel.gif?raw=true) | ![](./figures/vectorize.gif?raw=true) |  ![](./figures/unroll.gif?raw=true)
 
-
-
-#### <div align="center"> Tile + Fuse + Parallel</div>
-<div align="center"><img width="300" height="300" src="./figures/tile_parallel.gif"/></div>
 
 ## Basic Functions
 
