@@ -10,5 +10,9 @@ Divide whole image into tiles|   x86 SSE command |  Reduce repeat calculation
 
 
 
-### Tile + Fuse + Parallel
+###### Tile + Fuse + Parallel
 ![Para image](./figures/tile_parallel.gif?raw=true) 
+
+
+
+## Basic Functions
