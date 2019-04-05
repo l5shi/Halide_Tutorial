@@ -5,7 +5,7 @@ This repository will introduce the basic of Halide
 
 Tile             |   Vectorize (SIMD) |  Unroll Loop
 :-------------------------:|:-------------------------: |:-------------------------:
-Divide whole image into tiles|   Vectorize (SIMD) |  Unroll Loop
+Divide whole image into tiles|   x86 SSE command |  Reduce repeat calculation
 ![](./figures/tile.gif?raw=true)  |  ![](./figures/vectorize.gif?raw=true) |  ![](./figures/unroll.gif?raw=true)
 
 
