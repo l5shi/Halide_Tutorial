@@ -11,14 +11,12 @@ Divide whole image into tiles|  Taling parallel |   x86 SSE command |  Reduce re
 
 ## Scheduling multi-stage pipelines
 
-producer(x, y) = sin(x * y);
+producer(x, y) = sin(x * y)
 
-// Now we'll add a second stage which averages together multiple
-// points in the first stage.
 consumer(x, y) = (producer(x, y) +
                   producer(x, y+1) +
                   producer(x+1, y) +
-                  producer(x+1, y+1))/4;
+                  producer(x+1, y+1))/4
 
 
 
