@@ -11,12 +11,14 @@ Divide whole image into tiles|  Taling parallel |   x86 SSE command |  Reduce re
 
 ## Scheduling multi-stage pipelines
 
-#### Stage 1: producer(x, y) = sin(x * y)
+#### Stage 1: 
+producer(x, y) = sin(x * y)
 
-#### Stage 2: consumer(x, y) = (producer(x, y) +
-####                  producer(x, y+1) +
-####                  producer(x+1, y) +
-####                  producer(x+1, y+1))/4
+#### Stage 2: 
+consumer(x, y) = (producer(x, y)   +
+                  producer(x, y+1) +
+                  producer(x+1, y) +
+                  producer(x+1, y+1))/4
 
 
 
