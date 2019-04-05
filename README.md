@@ -16,7 +16,7 @@ Divide whole image into tiles|  parallel taling |   x86 SSE command |  Reduce re
 compute_root             |   compute_at | store_root.compute_at |  Tiling + compute_at
 :-------------------------:|:-------------------------: |:-------------------------: |:-------------------------:
 compute all producer first|  compute producer inside y loop |   use scanline to store intermediate data |  divide compute_at into tiles
-![](./figures/compute_root.gif?raw=true)  | ![](./figures/computer_at.gif?raw=true) | ![](./figures/root_at.gif?raw=true) |  ![](./figures/tile_at.gif?raw=true)
+![](./figures/compute_root.gif?raw=true)  | ![](./figures/compute_at.gif?raw=true) | ![](./figures/root_at.gif?raw=true) |  ![](./figures/tile_at.gif?raw=true)
 
 
 
