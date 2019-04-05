@@ -13,6 +13,6 @@ This repository will introduce the basic of Halide
 ![Para image](./figures/tile_parallel.gif?raw=true) 
 
 
-Solarized dark             |  Solarized Ocean
-:-------------------------:|:-------------------------:
-![](./figures/tile.gif?raw=true)  |  ![](./figures/tile_parallel.gif?raw=true)
+Solarized dark             |  Solarized Ocean |  S  olarized Ocean
+:-------------------------:|:-------------------------: |:-------------------------:
+![](./figures/tile.gif?raw=true)  |  ![](./figures/vectorize.gif?raw=true) |  ![](./figures/tile_parallel.gif?raw=true)
