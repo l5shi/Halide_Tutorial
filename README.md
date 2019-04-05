@@ -1,5 +1,5 @@
 # Halide_Turorial
-This repository will introduce the basic of Halide
+This repository will introduce the basic of Halide -> (Algorithm + Scheduling)
 
 ## Basic Functions
 
@@ -14,4 +14,13 @@ Divide whole image into tiles|   x86 SSE command |  Reduce repeat calculation
 ![](./figures/tile_parallel.gif?raw=true)
 
 
-<div align=center>## Basic Functions
+## Basic Functions
+
+
+
+
+
+
+
+
+
