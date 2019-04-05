@@ -5,17 +5,27 @@ This repository will introduce the basic of Halide -> (Algorithm + Scheduling)
 
 Tile             |   Tile + Fuse + Parallel | Vectorize (SIMD) |  Unroll Loop
 :-------------------------:|:-------------------------: |:-------------------------: |:-------------------------:
-Divide whole image into tiles|  parallel taling |   x86 SSE command |  Reduce repeat calculation
+Divide whole image into tiles|  Taling parallel |   x86 SSE command |  Reduce repeat calculation
 ![](./figures/tile.gif?raw=true)  | ![](./figures/tile_parallel.gif?raw=true) | ![](./figures/vectorize.gif?raw=true) |  ![](./figures/unroll.gif?raw=true)
 
 
-## Scheduling multi-pipelines
+## Scheduling multi-stage pipelines
+
+producer(x, y) = sin(x * y);
+
+// Now we'll add a second stage which averages together multiple
+// points in the first stage.
+consumer(x, y) = (producer(x, y) +
+                  producer(x, y+1) +
+                  producer(x+1, y) +
+                  producer(x+1, y+1))/4;
+
 
 
 
 compute_root             |   compute_at | store_root.compute_at |  Tiling + compute_at
 :-------------------------:|:-------------------------: |:-------------------------: |:-------------------------:
-compute all producer first|  compute producer inside y loop |   use scanline to store intermediate data |  divide compute_at into tiles
+Compute all producer before use|  Compute producer inside y loop |   Store intermediate data in several scanlines |  Divide compute_at into tiles
 ![](./figures/compute_root.gif?raw=true)  | ![](./figures/compute_at.gif?raw=true) | ![](./figures/root_at.gif?raw=true) |  ![](./figures/tile_at.gif?raw=true)
 
 
