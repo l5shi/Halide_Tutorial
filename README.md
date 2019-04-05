@@ -10,8 +10,8 @@ Divide whole image into tiles|   x86 SSE command |  Reduce repeat calculation
 
 
 
-###### Tile + Fuse + Parallel
-<div align="center"><img width="65" height="75" src="./figures/tile_parallel.gif"/></div>
+<div align="center">###### Tile + Fuse + Parallel</div>
+<div align="center"><img width="200" height="200" src="./figures/tile_parallel.gif"/></div>
 
 ## Basic Functions
 
