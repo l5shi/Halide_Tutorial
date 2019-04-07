@@ -27,5 +27,17 @@ consumer(x, y) = (producer(x, y)   +
 
 
 
+ store_root.compute_at |  Tiling + compute_at
+:-------------------------: |:-------------------------:
+ Store intermediate data in several scanlines |  Divide compute_at into tiles
+![](./figures/root_at.gif?raw=true) |  ![](./figures/tile_at.gif?raw=true)
+
+
+compute_root             |   compute_at 
+:-------------------------:|:-------------------------: 
+Compute all producer before use|  Compute producer inside y loop 
+![](./figures/compute_root.gif?raw=true)  | ![](./figures/compute_at.gif?raw=true) 
+
+
 
   
