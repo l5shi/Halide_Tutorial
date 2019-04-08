@@ -1,22 +1,10 @@
-// Halide tutorial lesson 5: Vectorize, parallelize, unroll and tile your code
+//vOrigin author：https://blog.csdn.net/luzhanbo207/article/details/78710831 \
+// Halide教程第五课：向量化，并行化，平铺，数据分块
+// 本课展示了如何才操作函数像素索引的计算顺序，包括向量化/并行化/平铺/分块等技术
 
-// This lesson demonstrates how to manipulate the order in which you
-// evaluate pixels in a Func, including vectorization,
-// parallelization, unrolling, and tiling.
-
-// On linux, you can compile and run it like so:
+// 在linux系统中，采用如下指令编译并执行
 // g++ lesson_05*.cpp -g -I ../include -L ../bin -lHalide -lpthread -ldl -o lesson_05 -std=c++11
 // LD_LIBRARY_PATH=../bin ./lesson_05
-
-// On os x:
-// g++ lesson_05*.cpp -g -I ../include -L ../bin -lHalide -o lesson_05 -std=c++11
-// DYLD_LIBRARY_PATH=../bin ./lesson_05
-
-// If you have the entire Halide source tree, you can also build it by
-// running:
-//    make tutorial_lesson_05_schedule_1
-// in a shell with the current directory at the top of the halide
-// source tree.
 
 #include "Halide.h"
 #include <stdio.h>
@@ -24,10 +12,6 @@
 using namespace Halide;
 
 int main(int argc, char **argv) {
-
-    // We're going to define and schedule our gradient function in
-    // several different ways, and see what order pixels are computed
-    // in.
 
     Var x("x"), y("y");
 
@@ -37,15 +21,9 @@ int main(int argc, char **argv) {
         gradient(x, y) = x + y;
         gradient.trace_stores();
 
-        // By default we walk along the rows and then down the
-        // columns. This means x varies quickly, and y varies
-        // slowly. x is the column and y is the row, so this is a
-        // row-major traversal.
+        //默认遍历像素的顺序是行优先，即内层循环沿着行方向，外层循环沿着列方向
         printf("Evaluating gradient row-major\n");
         Buffer<int> output = gradient.realize(4, 4);
-
-        // See figures/lesson_05_row_major.gif for a visualization of
-        // what this did.
 
         // The equivalent C is:
         printf("Equivalent C:\n");
@@ -56,9 +34,8 @@ int main(int argc, char **argv) {
         }
         printf("\n\n");
 
-        // Tracing is one useful way to understand what a schedule is
-        // doing. You can also ask Halide to print out pseudocode
-        // showing what loops Halide is generating:
+        // 跟踪系统调度可以很容易理解调度系统如何工作。可以通过Halide提供的函数来打印出实际工作
+        // 是执行的哪种循环调度。
         printf("Pseudo-code for the schedule:\n");
         gradient.print_loop_nest();
         printf("\n");
@@ -76,22 +53,12 @@ int main(int argc, char **argv) {
         gradient(x, y) = x + y;
         gradient.trace_stores();
 
-        // If we reorder x and y, we can walk down the columns
-        // instead. The reorder call takes the arguments of the func,
-        // and sets a new nesting order for the for loops that are
-        // generated. The arguments are specified from the innermost
-        // loop out, so the following call puts y in the inner loop:
+        // 可以通过reorder函数来改变函数遍历的顺序，下面的语句将行方向（y）置于内层循环，而将原本的内层
+        // 循环调整到了外循环。也就是说y遍历比x遍历更快。是一种列优先的遍历方法
         gradient.reorder(y, x);
-
-        // This means y (the row) will vary quickly, and x (the
-        // column) will vary slowly, so this is a column-major
-        // traversal.
 
         printf("Evaluating gradient column-major\n");
         Buffer<int> output = gradient.realize(4, 4);
-
-        // See figures/lesson_05_col_major.gif for a visualization of
-        // what this did.
 
         printf("Equivalent C:\n");
         for (int x = 0; x < 4; x++) {
@@ -101,8 +68,7 @@ int main(int argc, char **argv) {
         }
         printf("\n");
 
-        // If we print pseudo-code for this schedule, we'll see that
-        // the loop over y is now inside the loop over x.
+        // 
         printf("Pseudo-code for the schedule:\n");
         gradient.print_loop_nest();
         printf("\n");
@@ -114,20 +80,11 @@ int main(int argc, char **argv) {
         gradient(x, y) = x + y;
         gradient.trace_stores();
 
-        // The most powerful primitive scheduling operation you can do
-        // to a var is to split it into inner and outer sub-variables:
+        // 原始调度中，最有效的就是split调度了，它将一个大循环，拆解成一个外部循环和一个内部循环；
+        // 即，将x方向的循环，拆成一个外部循环x_outer和一个内部循环x_inner
+        // 下面的split将x拆成x_outer,x_inner, 内循环的长度为2
         Var x_outer, x_inner;
         gradient.split(x, x_outer, x_inner, 2);
-
-        // This breaks the loop over x into two nested loops: an outer
-        // one over x_outer, and an inner one over x_inner. The last
-        // argument to split was the "split factor". The inner loop
-        // runs from zero to the split factor. The outer loop runs
-        // from zero to the extent required of x (4 in this case)
-        // divided by the split factor. Within the loops, the old
-        // variable is defined to be outer * factor + inner. If the
-        // old loop started at a value other than zero, then that is
-        // also added within the loops.
 
         printf("Evaluating gradient with x split into x_outer and x_inner \n");
         Buffer<int> output = gradient.realize(4, 4);
@@ -146,11 +103,6 @@ int main(int argc, char **argv) {
         printf("Pseudo-code for the schedule:\n");
         gradient.print_loop_nest();
         printf("\n");
-
-        // Note that the order of evaluation of pixels didn't actually
-        // change! Splitting by itself does nothing, but it does open
-        // up all of the scheduling possibilities that we will explore
-        // below.
     }
 
     // Fuse two variables into one.
@@ -158,12 +110,7 @@ int main(int argc, char **argv) {
         Func gradient("gradient_fused");
         gradient(x, y) = x + y;
 
-        // The opposite of splitting is 'fusing'. Fusing two variables
-        // merges the two loops into a single for loop over the
-        // product of the extents. Fusing is less important than
-        // splitting, but it also sees use (as we'll see later in this
-        // lesson). Like splitting, fusing by itself doesn't change
-        // the order of evaluation.
+        // 和split相反的是fuse，它将两个变量融合成一个变量，fuse的重要性并没有split高。
         Var fused;
         gradient.fuse(x, y, fused);
 
@@ -184,21 +131,15 @@ int main(int argc, char **argv) {
     }
 
     // Evaluating in tiles.
+    // tile的中文意思是瓦片，在这里是指将图像数据拆分成和瓦片一项的小图像块
     {
         Func gradient("gradient_tiled");
         gradient(x, y) = x + y;
         gradient.trace_stores();
 
-        // Now that we can both split and reorder, we can do tiled
-        // evaluation. Let's split both x and y by a factor of four,
-        // and then reorder the vars to express a tiled traversal.
-        //
-        // A tiled traversal splits the domain into small rectangular
-        // tiles, and outermost iterates over the tiles, and within
-        // that iterates over the points within each tile. It can be
-        // good for performance if neighboring pixels use overlapping
-        // input data, for example in a blur. We can express a tiled
-        // traversal like so:
+        // 既然我们可以拆分和调整顺序，我们可以按照划分数据块的方式来进行计算。将x和y方向拆分，然后
+        // 调制x和y的顺序，按照小的数据块的方式来进行遍历。
+        // 一个小的数据块将整个图像划分成小的矩形，外层循环在tile击毙恩进行循环，遍历所有的tile。
         Var x_outer, x_inner, y_outer, y_inner;
         gradient.split(x, x_outer, x_inner, 4);
         gradient.split(y, y_outer, y_inner, 4);
@@ -209,9 +150,6 @@ int main(int argc, char **argv) {
 
         printf("Evaluating gradient in 4x4 tiles\n");
         Buffer<int> output = gradient.realize(8, 8);
-
-        // See figures/lesson_05_tiled.gif for a visualization of this
-        // schedule.
 
         printf("Equivalent C:\n");
         for (int y_outer = 0; y_outer < 2; y_outer++) {
@@ -238,38 +176,23 @@ int main(int argc, char **argv) {
         gradient(x, y) = x + y;
         gradient.trace_stores();
 
-        // The nice thing about splitting is that it guarantees the
-        // inner variable runs from zero to the split factor. Most of
-        // the time the split-factor will be a compile-time constant,
-        // so we can replace the loop over the inner variable with a
-        // single vectorized computation. This time we'll split by a
-        // factor of four, because on X86 we can use SSE to compute in
-        // 4-wide vectors.
+        // split能够让内层循环变量在一个划分银子内变化。这个划分因子通常是指定的，因此在编译时是一个常数
+        // 因此我们可以调用向量化指令来执行内部循环。在这里我们指定这个因子为4，这样就可以调用x86机器上的SSE
+        //指令来计算4倍宽的向量，这里充分利用了cpu的SIMD指令来加快计算
         Var x_outer, x_inner;
         gradient.split(x, x_outer, x_inner, 4);
         gradient.vectorize(x_inner);
 
-        // Splitting and then vectorizing the inner variable is common
-        // enough that there's a short-hand for it. We could have also
-        // said:
-        //
+        // 上述过程有更简单的形式
         // gradient.vectorize(x, 4);
-        //
-        // which is equivalent to:
-        //
+        // 等价于
         // gradient.split(x, x, x_inner, 4);
         // gradient.vectorize(x_inner);
-        //
-        // Note that in this case we reused the name 'x' as the new
-        // outer variable. Later scheduling calls that refer to x
-        // will refer to this new outer variable named x.
+        // 这里我们重用了x，将它当作外循环变量，稍后的调度将x当作外循环(x_outer)来进行调度
 
-        // This time we'll evaluate over an 8x4 box, so that we have
-        // more than one vector of work per scanline.
+        // 这次在一个8x4的矩形上执行gradient算法
         printf("Evaluating gradient with x_inner vectorized \n");
         Buffer<int> output = gradient.realize(8, 4);
-
-        // See figures/lesson_05_vectors.gif for a visualization.
 
         printf("Equivalent C:\n");
         for (int y = 0; y < 4; y++) {
@@ -306,12 +229,8 @@ int main(int argc, char **argv) {
         gradient(x, y) = x + y;
         gradient.trace_stores();
 
-        // If multiple pixels share overlapping data, it can make
-        // sense to unroll a computation so that shared values are
-        // only computed or loaded once. We do this similarly to how
-        // we expressed vectorizing. We split a dimension and then
-        // fully unroll the loop of the inner variable. Unrolling
-        // doesn't change the order in which things are evaluated.
+        // 如果多个像素共享一些重复的（overlapping）数据，可以将循环铺平，从而共享的数据只需要载入或者
+        // 计算一次。它和向量化的表达方式类似。先将数据进行划分，然后将内层循环铺平。
         Var x_outer, x_inner;
         gradient.split(x, x_outer, x_inner, 2);
         gradient.unroll(x_inner);
@@ -352,21 +271,12 @@ int main(int argc, char **argv) {
         gradient(x, y) = x + y;
         gradient.trace_stores();
 
-        // Splitting guarantees that the inner loop runs from zero to
-        // the split factor, which is important for the uses we saw
-        // above. So what happens when the total extent we wish to
-        // evaluate x over isn't a multiple of the split factor? We'll
-        // split by a factor three, and we'll evaluate gradient over a
-        // 7x2 box instead of the 4x4 box we've been using.
+        // 当原来图像尺寸不能整除划分的小矩形尺寸时，最后的一行或者一列的tile在边界处会出现重复计算的现象
         Var x_outer, x_inner;
         gradient.split(x, x_outer, x_inner, 3);
 
         printf("Evaluating gradient over a 7x2 box with x split by three \n");
         Buffer<int> output = gradient.realize(7, 2);
-
-        // See figures/lesson_05_split_7_by_3.gif for a visualization
-        // of what happened. Note that some points get evaluated more
-        // than once!
 
         printf("Equivalent C:\n");
         for (int y = 0; y < 2; y++) {
@@ -389,59 +299,25 @@ int main(int argc, char **argv) {
         gradient.print_loop_nest();
         printf("\n");
 
-        // If you read the output, you'll see that some coordinates
-        // were evaluated more than once. That's generally OK, because
-        // pure Halide functions have no side-effects, so it's safe to
-        // evaluate the same point multiple times. If you're calling
-        // out to C functions like we are, it's your responsibility to
-        // make sure you can handle the same point being evaluated
-        // multiple times.
-
-        // The general rule is: If we require x from x_min to x_min + x_extent, and
-        // we split by a factor 'factor', then:
-        //
-        // x_outer runs from 0 to (x_extent + factor - 1)/factor
-        // x_inner runs from 0 to factor
-        // x = min(x_outer * factor, x_extent - factor) + x_inner + x_min
-        //
-        // In our example, x_min was 0, x_extent was 7, and factor was 3.
-
-        // However, if you write a Halide function with an update
-        // definition (see lesson 9), then it is not safe to evaluate
-        // the same point multiple times, so we won't apply this
-        // trick. Instead the range of values computed will be rounded
-        // up to the next multiple of the split factor.
+        // 如果仔细查看程序的输出，你会发现有些像素点进行了不止一次计算。这是因为尺寸不能整除所致
+        // 由于Halide函数没有边缘效应，因此计算多次并不会产生副作用。
     }
 
     // Fusing, tiling, and parallelizing.
     {
-        // We saw in the previous lesson that we can parallelize
-        // across a variable. Here we combine it with fusing and
-        // tiling to express a useful pattern - processing tiles in
-        // parallel.
-
-        // This is where fusing shines. Fusing helps when you want to
-        // parallelize across multiple dimensions without introducing
-        // nested parallelism. Nested parallelism (parallel for loops
-        // within parallel for loops) is supported by Halide, but
-        // often gives poor performance compared to fusing the
-        // parallel variables into a single parallel for loop.
+        // 这里才是fuse真正发挥威力的地方。如果想要在多个维度进行并行计算，
+        // 可以将多个循环网fuse起来，然后在fuse后的维度下进行并行计算
 
         Func gradient("gradient_fused_tiles");
         gradient(x, y) = x + y;
         gradient.trace_stores();
 
-        // First we'll tile, then we'll fuse the tile indices and
-        // parallelize across the combination.
         Var x_outer, y_outer, x_inner, y_inner, tile_index;
         gradient.tile(x, y, x_outer, y_outer, x_inner, y_inner, 4, 4);
         gradient.fuse(x_outer, y_outer, tile_index);
         gradient.parallel(tile_index);
 
-        // The scheduling calls all return a reference to the Func, so
-        // you can also chain them together into a single statement to
-        // make things slightly clearer:
-        //
+        // 每个调度函数返回的是引用类型，因此可以按如下方式用点号连接起多次调用
         // gradient
         //     .tile(x, y, x_outer, y_outer, x_inner, y_inner, 2, 2)
         //     .fuse(x_outer, y_outer, tile_index)
@@ -451,9 +327,7 @@ int main(int argc, char **argv) {
         printf("Evaluating gradient tiles in parallel\n");
         Buffer<int> output = gradient.realize(8, 8);
 
-        // The tiles should occur in arbitrary order, but within each
-        // tile the pixels will be traversed in row-major order. See
-        // figures/lesson_05_parallel_tiles.gif for a visualization.
+        // tile层面的调度是乱序的，但是在每一个tile内部，是行优先的计算顺序
 
         printf("Equivalent (serial) C:\n");
         // This outermost loop should be a parallel for loop, but that's hard in C.
@@ -475,44 +349,27 @@ int main(int argc, char **argv) {
         printf("\n");
     }
 
-    // Putting it all together.
+    // 将前面演示的调度综合在一起
     {
-        // Are you ready? We're going to use all of the features above now.
         Func gradient_fast("gradient_fast");
         gradient_fast(x, y) = x + y;
 
-        // We'll process 64x64 tiles in parallel.
+        // tile尺寸为64x64，采用并行计算
         Var x_outer, y_outer, x_inner, y_inner, tile_index;
         gradient_fast
             .tile(x, y, x_outer, y_outer, x_inner, y_inner, 64, 64)
             .fuse(x_outer, y_outer, tile_index)
             .parallel(tile_index);
 
-        // We'll compute two scanlines at once while we walk across
-        // each tile. We'll also vectorize in x. The easiest way to
-        // express this is to recursively tile again within each tile
-        // into 4x2 subtiles, then vectorize the subtiles across x and
-        // unroll them across y:
+        // 将内部的64x64tile继续拆分成更小的tile。在x方向上采用向量化的计算（调用SIMD指令），
+        // 在y方向进行平铺
         Var x_inner_outer, y_inner_outer, x_vectors, y_pairs;
         gradient_fast
             .tile(x_inner, y_inner, x_inner_outer, y_inner_outer, x_vectors, y_pairs, 4, 2)
             .vectorize(x_vectors)
             .unroll(y_pairs);
 
-        // Note that we didn't do any explicit splitting or
-        // reordering. Those are the most important primitive
-        // operations, but mostly they are buried underneath tiling,
-        // vectorizing, or unrolling calls.
-
-        // Now let's evaluate this over a range which is not a
-        // multiple of the tile size.
-
-        // If you like you can turn on tracing, but it's going to
-        // produce a lot of printfs. Instead we'll compute the answer
-        // both in C and Halide and see if the answers match.
         Buffer<int> result = gradient_fast.realize(350, 250);
-
-        // See figures/lesson_05_fast.mp4 for a visualization.
 
         printf("Checking Halide result against equivalent C...\n");
         for (int tile_index = 0; tile_index < 6 * 4; tile_index++) {
@@ -583,9 +440,13 @@ int main(int argc, char **argv) {
         // within the mess. This C code is hard to write, hard to read,
         // hard to debug, and hard to optimize further. This is why Halide
         // exists.
+        // 从前面给出的几个调度的例子可以看出，Halide对应版本的代码相对于C的代码，算法和调度分别进行分离
+        // 调度方便，发ingbianjinxing游动优化，而对应的C语言代码，冗长杂乱，很难写/难读/调试困难，
+        // 不方便进一步优化
     }
 
 
     printf("Success!\n");
     return 0;
 }
+

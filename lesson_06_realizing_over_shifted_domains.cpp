@@ -1,21 +1,14 @@
+// Origin author：https://blog.csdn.net/luzhanbo207/article/details/78711218 
 // Halide tutorial lesson 6: Realizing Funcs over arbitrary domains
+// Halide入门教程第六课：在指定区域上执行函数
 
 // This lesson demonstrates how to evaluate a Func over a domain that
 // does not start at (0, 0).
+// 本课演示了如何在指定区域上执行函数，而不是默认的以（0，0）起点在整个图像上执行操作
 
 // On linux, you can compile and run it like so:
 // g++ lesson_06*.cpp -g -I ../include -L ../bin -lHalide -lpthread -ldl -o lesson_06 -std=c++11
 // LD_LIBRARY_PATH=../bin ./lesson_06
-
-// On os x:
-// g++ lesson_06*.cpp -g -I ../include -L ../bin -lHalide -o lesson_06 -std=c++11
-// DYLD_LIBRARY_PATH=../bin ./lesson_06
-
-// If you have the entire Halide source tree, you can also build it by
-// running:
-//    make tutorial_lesson_06_realizing_over_shifted_domains
-// in a shell with the current directory at the top of the halide
-// source tree.
 
 #include "Halide.h"
 #include <stdio.h>
@@ -23,11 +16,6 @@
 using namespace Halide;
 
 int main(int argc, char **argv) {
-
-    // The last lesson was quite involved, and scheduling complex
-    // multi-stage pipelines is ahead of us. As an interlude, let's
-    // consider something easy: evaluating funcs over rectangular
-    // domains that do not start at the origin.
 
     // We define our familiar gradient function.
     Func gradient("gradient");
@@ -37,22 +25,16 @@ int main(int argc, char **argv) {
     // And turn on tracing so we can see how it is being evaluated.
     gradient.trace_stores();
 
-    // Previously we've realized gradient like so:
-    //
+    // 之前，按照如下方式进行梯度计算
     // gradient.realize(8, 8);
-    //
-    // This does three things internally:
-    // 1) Generates code than can evaluate gradient over an arbitrary
-    // rectangle.
-    // 2) Allocates a new 8 x 8 image.
-    // 3) Runs the generated code to evaluate gradient for all x, y
-    // from (0, 0) to (7, 7) and puts the result into the image.
-    // 4) Returns the new image as the result of the realize call.
+    // 它隐含地做了如下三件事
+    // 1) 生成可以在任何矩形上进行计算的代码
+    // 2) 分配一个新的8x8的图像存储空间
+    // 3) 遍历x, y从(0, 0) 到 (7, 7) 把生成的结果保存到图像中
+    // 4) 返回结果图像
 
-    // What if we're managing memory carefully and don't want Halide
-    // to allocate a new image for us? We can call realize another
-    // way. We can pass it an image we would like it to fill in. The
-    // following evaluates our Func into an existing image:
+    // 如果不想Halide分配新的图像空间，可以采用其他的方式调用realize成员函数。将图像以参数的形式传给realize
+    // 将结果填充到对应的参数图像当中。下面的例子就是将计算结果填充到一幅已经存在的图像当中。
     printf("Evaluating gradient from (0, 0) to (7, 7)\n");
     Buffer<int> result(8, 8);
     gradient.realize(result);
@@ -67,19 +49,15 @@ int main(int argc, char **argv) {
         }
     }
 
-    // Now let's evaluate gradient over a 5 x 7 rectangle that starts
-    // somewhere else -- at position (100, 50). So x and y will run
-    // from (100, 50) to (104, 56) inclusive.
-
+    // 现在，想要在5x7的矩形区域上计算梯度，而且起始坐标为（100， 50）
     // We start by creating an image that represents that rectangle:
-    Buffer<int> shifted(5, 7); // In the constructor we tell it the size.
-    shifted.set_min(100, 50); // Then we tell it the top-left corner.
+    // 创建一个表示5x7图像的矩形区域
+    Buffer<int> shifted(5, 7); // 在构造函数中指定尺寸
+    shifted.set_min(100, 50); // 指定，计算区域的其实坐标（左上角坐标）
 
     printf("Evaluating gradient from (100, 50) to (104, 56)\n");
 
-    // Note that this won't need to compile any new code, because when
-    // we realized it the first time, we generated code capable of
-    // evaluating gradient over an arbitrary rectangle.
+    // 这里不需要重新编译代码，原因是halide生成的是可以在任何矩形上操作的代码
     gradient.realize(shifted);
 
     // From C++, we also access the image object using coordinates
@@ -92,13 +70,10 @@ int main(int argc, char **argv) {
             }
         }
     }
-    // The image 'shifted' stores the value of our Func over a domain
-    // that starts at (100, 50), so asking for shifted(0, 0) would in
-    // fact read out-of-bounds and probably crash.
 
-    // What if we want to evaluate our Func over some region that
-    // isn't rectangular? Too bad. Halide only does rectangles :)
+    // 如果想要在非矩形的区域上操作呢？非常遗憾，Halide值提供了矩形区域的操作。
 
     printf("Success!\n");
     return 0;
 }
+
