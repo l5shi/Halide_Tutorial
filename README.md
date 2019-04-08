@@ -1,13 +1,44 @@
 # Halide_Turorial
-This repository will introduce the basic of Halide
+This repository will introduce the basic of Halide -> (Algorithm + Scheduling)
 
 ## Basic Functions
 
-Tile             |   Vectorize (SIMD) |  Unroll Loop
-:-------------------------:|:-------------------------: |:-------------------------:
-![](./figures/tile.gif?raw=true)  |  ![](./figures/vectorize.gif?raw=true) |  ![](./figures/unroll.gif?raw=true)
+Tile             |   Tile + Fuse + Parallel | Vectorize (SIMD) |  Unroll Loop
+:-------------------------:|:-------------------------: |:-------------------------: |:-------------------------:
+Divide whole image into tiles|  Taling parallel |   x86 SSE command |  Reduce repeat calculation
+![](./figures/tile.gif?raw=true)  | ![](./figures/tile_parallel.gif?raw=true) | ![](./figures/vectorize.gif?raw=true) |  ![](./figures/unroll.gif?raw=true)
+
+
+## Scheduling multi-stage pipelines
+
+#### Stage 1: 
+producer(x, y) = sin(x * y)
+
+#### Stage 2: 
+consumer(x, y) = (producer(x, y)   +
+                  producer(x, y+1) +
+                  producer(x+1, y) +
+                  producer(x+1, y+1))/4
 
 
 
-### Tile + Fuse + Parallel
-![Para image](./figures/tile_parallel.gif?raw=true) 
+
+
+
+
+
+ store_root.compute_at |  Tiling + compute_at
+:-------------------------: |:-------------------------:
+ Store intermediate data in several scanlines |  Divide compute_at into tiles
+![](./figures/root_at.gif?raw=true) |  ![](./figures/tile_at.gif?raw=true)
+
+
+compute_root             |   compute_at 
+:-------------------------:|:-------------------------: 
+Compute all producer before use|  Compute producer inside y loop 
+![](./figures/compute_root.gif?raw=true)  | ![](./figures/compute_at.gif?raw=true) 
+
+
+
+  
+[reference: https://blog.csdn.net/luzhanbo207/article/details/78655484 ]
