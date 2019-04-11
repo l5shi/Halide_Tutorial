@@ -2,7 +2,7 @@
 ![](https://img.shields.io/badge/Price-FREE-green.svg)
 [![](https://img.shields.io/badge/Donate-支付宝|微信|Venmo-blue.svg)](https://github.com/l5shi/__Overview__/tree/master/donate)
 
-# Halide_Turorial
+# Halide_Turorial 
 This repository will introduce the basic of Halide -> (Algorithm + Scheduling)
 
 ## Basic Functions
