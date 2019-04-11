@@ -1,5 +1,6 @@
 ![](https://img.shields.io/badge/language-C++-orange.svg)
 ![](https://img.shields.io/badge/Price-FREE-green.svg)
+![](https://img.shields.io/badge/Donate-支付宝-blue.svg)
 
 # Halide_Turorial
 This repository will introduce the basic of Halide -> (Algorithm + Scheduling)
